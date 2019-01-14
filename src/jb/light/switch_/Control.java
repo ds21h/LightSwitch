@@ -209,14 +209,14 @@ public class Control {
         Random lRnd;
         int lRndCorr;
         ZonedDateTime lSunset;
-        Setting lInst;
+        Setting lSetting;
         int lDay;
 
-        lInst = mData.xSetting();
+        lSetting = mData.xSetting();
 
         mData.xWriteLog("Start update");
 
-        lSunset = mSunset.xSunset(lInst.xLattitude(), lInst.xLongitude()).atZoneSameInstant(ZoneId.systemDefault());
+        lSunset = mSunset.xSunset(lSetting.xLattitude(), lSetting.xLongitude()).atZoneSameInstant(ZoneId.systemDefault());
         if (mTest) {
             if (mTestSunsetHour < 0) {
                 mCurrent.xSunset(lSunset);
@@ -232,13 +232,13 @@ public class Control {
         mData.xWriteLog("Sunset at " + mCurrent.xSunset().toString());
 
         lRnd = new Random();
-        lRndCorr = lRnd.nextInt(lInst.xPeriod());
-        if (lInst.xLightOffHour() < 10) {
+        lRndCorr = lRnd.nextInt(lSetting.xLightOffPeriod());
+        if (lSetting.xLightOffHour() < 10) {
             lDay = 1;
         } else {
             lDay = 0;
         }
-        mCurrent.xLightOff(ZonedDateTime.now().plusDays(lDay).withHour(lInst.xLightOffHour()).withMinute(lInst.xLightOffMin()).withSecond(0).withNano(0).plusMinutes(lRndCorr));
+        mCurrent.xLightOff(ZonedDateTime.now().plusDays(lDay).withHour(lSetting.xLightOffHour()).withMinute(lSetting.xLightOffMin()).withSecond(0).withNano(0).plusMinutes(lRndCorr));
         mCurrent.xFase(Current.cFaseDay);
         mData.xCurrent(mCurrent);
         mData.xWriteLog("Lights off at " + mCurrent.xLightOff().toString());
