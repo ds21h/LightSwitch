@@ -160,7 +160,7 @@ public class Control {
         }
     }
 
-    private void sTestOn() throws InterruptedException {
+    private void sTestOn() {
         boolean lOn;
         String lText;
         Setting lSetting;

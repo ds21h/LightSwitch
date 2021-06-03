@@ -7,10 +7,10 @@ package jb.light.switch_;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.GpioPinDigitalMultipurpose;
-import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.PinMode;
-import com.pi4j.io.gpio.PinState;
+import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.RaspiPin;
 import jb.light.support.Data;
 import jb.light.support.Setting;
@@ -22,8 +22,8 @@ import jb.light.support.Setting;
 public class LightSensor {
 
     private final GpioController mGpio;
-    private final GpioPinDigitalOutput mLive;
-    private final GpioPinDigitalMultipurpose mLDRsensor;
+    private final GpioPinDigitalMultipurpose mLive;
+    private final GpioPinDigitalInput mLDRsensor;
     private int mLightCount = 0;
     private int mLightReading = 0;
     private int mBaseLevel = 0;
@@ -43,9 +43,10 @@ public class LightSensor {
         cGpioOn = pGpioOn;
         if (cGpioOn) {
             mGpio = GpioFactory.getInstance();
-            mLive = mGpio.provisionDigitalOutputPin(RaspiPin.GPIO_01, "Live", PinState.LOW);
-            mLive.setShutdownOptions(true, PinState.LOW);
-            mLDRsensor = mGpio.provisionDigitalMultipurposePin(RaspiPin.GPIO_04, "LDR sensor", PinMode.DIGITAL_OUTPUT);
+            mLive = mGpio.provisionDigitalMultipurposePin(RaspiPin.GPIO_01, "Live", PinMode.DIGITAL_INPUT);
+            mLive.setPullResistance(PinPullResistance.PULL_DOWN);
+            mLDRsensor = mGpio.provisionDigitalInputPin(RaspiPin.GPIO_04, "LDR sensor");
+            mLDRsensor.setPullResistance(PinPullResistance.PULL_DOWN);
         } else {
             mGpio = null;
             mLive = null;
@@ -58,21 +59,23 @@ public class LightSensor {
         mBaseLevel = 0;
     }
 
-    public boolean xTestOn() throws InterruptedException {
+    public boolean xTestOn() {
         boolean lOn = false;
         Setting lSetting;
 
         lSetting = mData.xSetting();
 
-        mLightReading = sReadLight(lSetting.xMaxSensor());
+        mLightReading = sReadLight();
         if (mBaseLevel == 0) {
             if (mLightReading > lSetting.xSensorLimit() + 5) {
                 mBaseLevel = lSetting.xSensorLimit() + 5;
             } else {
                 mBaseLevel = mLightReading;
             }
-        } else if (mLightReading < mBaseLevel) {
-            mBaseLevel = mLightReading;
+        } else {
+            if (mLightReading < mBaseLevel) {
+                mBaseLevel = mLightReading;
+            }
         }
         if (mLightReading > lSetting.xSensorLimit()) {
             if (mLightReading > mBaseLevel + lSetting.xSensorTreshold()) {
@@ -90,34 +93,46 @@ public class LightSensor {
         return lOn;
     }
 
-    private int sReadLight(int pMaxSensor) throws InterruptedException {
+    private int sReadLight() {
         int lCount;
+        int lResult;
         boolean lStop;
+        long lStartTimeMili;
+        long lStartTimeNano;
 
         if (cGpioOn) {
-            mLDRsensor.setMode(PinMode.DIGITAL_OUTPUT);
-            mLDRsensor.low();
-            Thread.sleep(100);
-            mLDRsensor.setMode(PinMode.DIGITAL_INPUT);
+            mLive.setPullResistance(PinPullResistance.OFF);
+            mLDRsensor.setPullResistance(PinPullResistance.OFF);
+            mLive.setMode(PinMode.DIGITAL_OUTPUT);
             mLive.high();
+            lStartTimeMili = System.currentTimeMillis();
+            lStartTimeNano = System.nanoTime();
             lCount = 0;
             lStop = false;
             while (!lStop) {
                 if (mLDRsensor.isLow()) {
                     lCount++;
-                    if (lCount > pMaxSensor) {
+                    if (lCount > 2500) {
+                        if ((System.currentTimeMillis() - lStartTimeMili) > 1000){
                         lStop = true;
+                        } else {
+                            lCount = 0;
+                        }
                     }
                 } else {
                     lStop = true;
                 }
             }
+            lResult = (int) ((System.nanoTime() - lStartTimeNano) / 10000);
             mLive.low();
+            mLive.setMode(PinMode.DIGITAL_INPUT);
+            mLive.setPullResistance(PinPullResistance.PULL_DOWN);
+            mLDRsensor.setPullResistance(PinPullResistance.PULL_DOWN);
         } else {
-            lCount = 0;
+            lResult = 0;
         }
 
-        return lCount;
+        return lResult;
     }
 
     public void xClose() {

@@ -7,6 +7,10 @@ The project structure is that of NetBeans 8.2.
 
 History:
 
+Version 1.1 - 03-06-2021
+  -   Uses upgraded LightSupport.jar (Version 1.1)
+  -   Enhanced LightSensor. Instead of just counting the cycles needed to reach 'High' on the sensorpin the elapsed time (in hundredth if a millisecond) is returned. The OpenJDK runtime changes the algorithm used during execution (it gets much more efficient) so 'number of iterations' is no longer comparable.
+
 Version 1.0.1 - 14-01-2019
   -   Logmessage for Time lights off enhanced
   -   Bug fixed in LightOffPeriod (used Settings.xPeriod instead of Settings.LightOffPeriod)
