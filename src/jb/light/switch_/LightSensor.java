@@ -26,7 +26,7 @@ public class LightSensor {
     private final GpioPinDigitalInput mLDRsensor;
     private int mLightCount = 0;
     private int mLightReading = 0;
-    private int mBaseLevel = 0;
+//    private int mBaseLevel = 0;
     private final boolean cGpioOn;
     private final Data mData;
 
@@ -56,7 +56,7 @@ public class LightSensor {
 
     public void xInit() {
         mLightCount = 0;
-        mBaseLevel = 0;
+        //    mBaseLevel = 0;
     }
 
     public boolean xTestOn() {
@@ -66,26 +66,26 @@ public class LightSensor {
         lSetting = mData.xSetting();
 
         mLightReading = sReadLight();
-        if (mBaseLevel == 0) {
-            if (mLightReading > lSetting.xSensorLimit() + 5) {
-                mBaseLevel = lSetting.xSensorLimit() + 5;
-            } else {
-                mBaseLevel = mLightReading;
-            }
-        } else {
-            if (mLightReading < mBaseLevel) {
-                mBaseLevel = mLightReading;
-            }
-        }
+//        if (mBaseLevel == 0) {
+//            if (mLightReading > lSetting.xSensorLimit() + 5) {
+//                mBaseLevel = lSetting.xSensorLimit() + 5;
+//            } else {
+//                mBaseLevel = mLightReading;
+//            }
+//        } else {
+//            if (mLightReading < mBaseLevel) {
+//                mBaseLevel = mLightReading;
+//            }
+//        }
         if (mLightReading > lSetting.xSensorLimit()) {
-            if (mLightReading > mBaseLevel + lSetting.xSensorTreshold()) {
-                mLightCount++;
-                if (mLightCount > lSetting.xPeriodDark()) {
-                    lOn = true;
-                }
-            } else {
-                mLightCount = 0;
+//            if (mLightReading > mBaseLevel + lSetting.xSensorTreshold()) {
+            mLightCount++;
+            if (mLightCount > lSetting.xPeriodDark()) {
+                lOn = true;
             }
+//            } else {
+//                mLightCount = 0;
+//        }
         } else {
             mLightCount = 0;
         }
@@ -113,8 +113,8 @@ public class LightSensor {
                 if (mLDRsensor.isLow()) {
                     lCount++;
                     if (lCount > 2500) {
-                        if ((System.currentTimeMillis() - lStartTimeMili) > 1000){
-                        lStop = true;
+                        if ((System.currentTimeMillis() - lStartTimeMili) > 1000) {
+                            lStop = true;
                         } else {
                             lCount = 0;
                         }

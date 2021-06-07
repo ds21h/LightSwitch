@@ -31,7 +31,7 @@ public class Control {
     private boolean mTest = false;
     private int mTestSunsetHour;
     private int mTestSunsetMin;
-    private int mTestIntervalMin;
+//    private int mTestIntervalMin;
     private int mTestIntervalSec;
 
     private final SunriseSunset mSunset = new SunriseSunset();
@@ -51,7 +51,7 @@ public class Control {
         sProcess();
     }
 
-    public void xStart(int pSunsetHour, int pSunsetMin, int pIntervalMin, int pIntervalSec) {
+    public void xStart(int pSunsetHour, int pSunsetMin, int pIntervalSec) {
         sSetSysout();
         mTest = true;
         mStop = false;
@@ -62,11 +62,16 @@ public class Control {
             mTestSunsetHour = pSunsetHour;
             mTestSunsetMin = pSunsetMin;
         }
-        if (pIntervalMin < 0) {
-            mTestIntervalMin = -1;
+//        if (pIntervalMin < 0) {
+//            mTestIntervalMin = -1;
+//            mTestIntervalSec = -1;
+//        } else {
+//            mTestIntervalMin = pIntervalMin;
+//            mTestIntervalSec = pIntervalSec;
+//        }
+        if (pIntervalSec < 0) {
             mTestIntervalSec = -1;
         } else {
-            mTestIntervalMin = pIntervalMin;
             mTestIntervalSec = pIntervalSec;
         }
         sUpdate();
@@ -180,13 +185,17 @@ public class Control {
             if (!lOn) {
                 lOnTest = ZonedDateTime.now();
                 if (mTest) {
-                    if (mTestIntervalMin < 0) {
-                        lOnTest = lOnTest.plusMinutes(lSetting.xPeriodMinute()).plusSeconds(lSetting.xPeriodSec());
+//                    if (mTestIntervalMin < 0) {
+                    if (mTestIntervalSec < 0) {
+//                        lOnTest = lOnTest.plusMinutes(lSetting.xPeriodMinute()).plusSeconds(lSetting.xPeriodSec());
+                        lOnTest = lOnTest.plusSeconds(lSetting.xPeriodSec());
                     } else {
-                        lOnTest = lOnTest.plusMinutes(mTestIntervalMin).plusSeconds(mTestIntervalSec);
+//                        lOnTest = lOnTest.plusMinutes(mTestIntervalMin).plusSeconds(mTestIntervalSec);
+                        lOnTest = lOnTest.plusSeconds(mTestIntervalSec);
                     }
                 } else {
-                    lOnTest = lOnTest.plusMinutes(lSetting.xPeriodMinute()).plusSeconds(lSetting.xPeriodSec());
+//                    lOnTest = lOnTest.plusMinutes(lSetting.xPeriodMinute()).plusSeconds(lSetting.xPeriodSec());
+                    lOnTest = lOnTest.plusSeconds(lSetting.xPeriodSec());
                 }
                 lText = lText + ". Next test at " + lOnTest;
                 mCurrent.xStartLightOn(lOnTest);

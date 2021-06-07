@@ -5,7 +5,6 @@
  */
 package jb.light.switch_;
 
-import java.io.IOException;
 import java.time.ZonedDateTime;
 import jb.light.support.Action;
 import jb.light.support.Data;
@@ -19,58 +18,59 @@ import org.json.JSONObject;
 public class Transmitter {
 
     private final boolean mWithPause;
-    private final boolean mIoOn;
+//    private final boolean mIoOn;
     private final Data mData;
 
     public Transmitter(Data pData, boolean pIoOn, boolean pWithPause) {
         mData = pData;
-        mIoOn = pIoOn;
+//        mIoOn = pIoOn;
         mWithPause = pWithPause;
     }
 
     public void xSwitch(Switch pSwitch, boolean pOn) {
         if (pSwitch.xActive()) {
-            if (pSwitch.xType().equals("esp")) {
                 sSwitchIot(pSwitch, pOn);
-            } else {
-                if (mIoOn) {
-                    sSwitchFM(pSwitch, pOn);
-                }
-            }
+//            if (pSwitch.xType().equals("esp")) {
+//                sSwitchIot(pSwitch, pOn);
+//            } else {
+//                if (mIoOn) {
+//                    sSwitchFM(pSwitch, pOn);
+//                }
+//            }
         }
     }
 
-    private void sSwitchFM(Switch pSwitch, boolean pOn) {
-        Runtime lRun;
-        Process lProcess;
-        String lCommand;
-        String lAction;
-
-        if (mWithPause) {
-            try {
-                Thread.sleep(pSwitch.xPause());
-            } catch (InterruptedException pExc) {
-            }
-        }
-
-        lRun = Runtime.getRuntime();
-        if (pOn) {
-            lAction = "on";
-        } else {
-            lAction = "off";
-        }
-
-        lCommand = "/usr/local/licht/schakelen/" + pSwitch.xType() + " " + pSwitch.xGroup() + " " + pSwitch.xPoint() + " " + lAction;
-
-        try {
-            lProcess = lRun.exec(lCommand);
-            lProcess.waitFor();
-            Thread.sleep(1000);
-            lProcess = lRun.exec(lCommand);
-            lProcess.waitFor();
-        } catch (IOException | InterruptedException pExc) {
-        }
-    }
+//    private void sSwitchFM(Switch pSwitch, boolean pOn) {
+//        Runtime lRun;
+//        Process lProcess;
+//        String lCommand;
+//        String lAction;
+//
+//        if (mWithPause) {
+//            try {
+//                Thread.sleep(pSwitch.xPause());
+//            } catch (InterruptedException pExc) {
+//            }
+//        }
+//
+//        lRun = Runtime.getRuntime();
+//        if (pOn) {
+//            lAction = "on";
+//        } else {
+//            lAction = "off";
+//        }
+//
+//        lCommand = "/usr/local/licht/schakelen/" + pSwitch.xType() + " " + pSwitch.xGroup() + " " + pSwitch.xPoint() + " " + lAction;
+//
+//        try {
+//            lProcess = lRun.exec(lCommand);
+//            lProcess.waitFor();
+//            Thread.sleep(1000);
+//            lProcess = lRun.exec(lCommand);
+//            lProcess.waitFor();
+//        } catch (IOException | InterruptedException pExc) {
+//        }
+//    }
 
     private void sSwitchIot(Switch pSwitch, boolean pOn) {
         RestAPI lRestAPI;
