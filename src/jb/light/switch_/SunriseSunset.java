@@ -13,7 +13,7 @@ import java.time.ZoneOffset;
  * Sunrise /Sunset calculation
  *
  * Algorithm borrowed from
- * http://williams.best.vwh.net/sunrise_sunset_algorithm.htm
+ * https://edwilliams.org/sunrise_sunset_algorithm.htm
  *
  */
 public class SunriseSunset {

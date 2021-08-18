@@ -47,7 +47,6 @@ public class SwitchLight {
                 }
             }
             if (lArgOK) {
-//                mControl.xStart(lHour, lMin, 0, 15);
                 mControl.xStart(lHour, lMin, 15);
             } else {
                 System.out.println("Correct format: Sunset=hh:mm");

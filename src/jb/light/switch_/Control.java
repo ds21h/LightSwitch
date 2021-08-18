@@ -31,7 +31,6 @@ public class Control {
     private boolean mTest = false;
     private int mTestSunsetHour;
     private int mTestSunsetMin;
-//    private int mTestIntervalMin;
     private int mTestIntervalSec;
 
     private final SunriseSunset mSunset = new SunriseSunset();
@@ -62,13 +61,6 @@ public class Control {
             mTestSunsetHour = pSunsetHour;
             mTestSunsetMin = pSunsetMin;
         }
-//        if (pIntervalMin < 0) {
-//            mTestIntervalMin = -1;
-//            mTestIntervalSec = -1;
-//        } else {
-//            mTestIntervalMin = pIntervalMin;
-//            mTestIntervalSec = pIntervalSec;
-//        }
         if (pIntervalSec < 0) {
             mTestIntervalSec = -1;
         } else {
@@ -145,7 +137,7 @@ public class Control {
                     mCurrent.xLightOffProcessed();
                     mCurrent.xFase(Current.cFaseNight);
                     mData.xCurrent(mCurrent);
-                    sSwitchAll(false);
+                    sSwitchAllOffAuto();
                 }
 
                 if (mCurrent.xUpdate().isBefore(lNow)) {
@@ -185,16 +177,12 @@ public class Control {
             if (!lOn) {
                 lOnTest = ZonedDateTime.now();
                 if (mTest) {
-//                    if (mTestIntervalMin < 0) {
                     if (mTestIntervalSec < 0) {
-//                        lOnTest = lOnTest.plusMinutes(lSetting.xPeriodMinute()).plusSeconds(lSetting.xPeriodSec());
                         lOnTest = lOnTest.plusSeconds(lSetting.xPeriodSec());
                     } else {
-//                        lOnTest = lOnTest.plusMinutes(mTestIntervalMin).plusSeconds(mTestIntervalSec);
                         lOnTest = lOnTest.plusSeconds(mTestIntervalSec);
                     }
                 } else {
-//                    lOnTest = lOnTest.plusMinutes(lSetting.xPeriodMinute()).plusSeconds(lSetting.xPeriodSec());
                     lOnTest = lOnTest.plusSeconds(lSetting.xPeriodSec());
                 }
                 lText = lText + ". Next test at " + lOnTest;
@@ -210,7 +198,7 @@ public class Control {
             mCurrent.xStartLightOnProcessed();
             mCurrent.xFase(Current.cFaseEvening);
             mData.xCurrent(mCurrent);
-            sSwitchAll(true);
+            sSwitchAllOnAuto();
         }
     }
 
@@ -267,12 +255,118 @@ public class Control {
             lText = "Lights off!";
         }
         mData.xWriteLog(lText);
-        lTrans = new Transmitter(mData, cGpioOn, true);
+        lTrans = new Transmitter(true);
         lSwitches = mData.xSwitches();
         for (lCount = 0; lCount < lSwitches.size(); lCount++) {
             lSwitch = lSwitches.get(lCount);
             mData.xActionSwitchProcessed(lSwitch);
-            lTrans.xSwitch(lSwitch, pOn);
+            if (lSwitch.xActive()){
+                if (pOn){
+                    lTrans.xSwitchOn(lSwitch, null);
+                } else {
+                    lTrans.xSwitchOff(lSwitch);
+                }
+            }
+        }
+    }
+
+    private void sSwitchAllOnAuto() {
+        List<Switch> lSwitches;
+        Switch lSwitch;
+        Transmitter lTrans;
+        int lCount;
+        ZonedDateTime lAutoOff;
+
+        mData.xWriteLog("Lights on auto");
+        lTrans = new Transmitter(true);
+        lSwitches = mData.xSwitches();
+        lAutoOff = mCurrent.xLightOff().plusHours(2);
+        for (lCount = 0; lCount < lSwitches.size(); lCount++) {
+            lSwitch = lSwitches.get(lCount);
+            mData.xActionSwitchProcessed(lSwitch);
+            if (lSwitch.xActive()) {
+                sSwitchOnAuto(lTrans, lSwitch, lAutoOff);
+            }
+        }
+    }
+
+    private void sSwitchAllOffAuto() {
+        List<Switch> lSwitches;
+        Switch lSwitch;
+        Transmitter lTrans;
+        int lCount;
+        ZonedDateTime lAutoEnd;
+
+        mData.xWriteLog("Lights off auto");
+        lTrans = new Transmitter(true);
+        lSwitches = mData.xSwitches();
+        lAutoEnd = ZonedDateTime.now().plusDays(1);
+        for (lCount = 0; lCount < lSwitches.size(); lCount++) {
+            lSwitch = lSwitches.get(lCount);
+            mData.xActionSwitchProcessed(lSwitch);
+            if (lSwitch.xActive()) {
+                sSwitchOffAuto(lTrans, lSwitch, lAutoEnd);
+            }
+        }
+    }
+
+    private void sSwitchOnAuto(Transmitter pTrans, Switch pSwitch, ZonedDateTime pAutoOff) {
+        boolean lResult;
+        Action lCorrAction;
+        ZonedDateTime lActionMoment;
+        int lNumbError;
+        int lInterval;
+
+        if (pAutoOff.isAfter(ZonedDateTime.now().plusMinutes(15))) {
+            lResult = pTrans.xSwitchOn(pSwitch, pAutoOff);
+            EspStatus.xEspAction(pSwitch.xName(), (lResult) ? EspStatus.cOK : EspStatus.cNOK);
+            if (!lResult) {
+                lNumbError = EspStatus.xNumberError(pSwitch.xName());
+                if (lNumbError > 10) {
+                    if (lNumbError > 15) {
+                        lInterval = 60;
+                    } else {
+                        lInterval = 10;
+                    }
+                } else {
+                    lInterval = 1;
+                }
+                lActionMoment = ZonedDateTime.now().plusMinutes(lInterval);
+                if (lActionMoment.isBefore(pAutoOff)) {
+                    lCorrAction = new Action(lActionMoment, Action.cActionSwitchOn, pSwitch.xName(), pAutoOff);
+                    mData.xNewAction(lCorrAction);
+                }
+            }
+        }
+    }
+
+    private void sSwitchOffAuto(Transmitter pTrans, Switch pSwitch, ZonedDateTime pAutoEnd) {
+        boolean lResult;
+        Action lCorrAction;
+        ZonedDateTime lActionMoment;
+        int lNumbError;
+        int lInterval;
+
+        if (pAutoEnd.isAfter(ZonedDateTime.now())) {
+            lResult = pTrans.xSwitchOff(pSwitch);
+            EspStatus.xEspAction(pSwitch.xName(), (lResult) ? EspStatus.cOK : EspStatus.cNOK);
+            if (!lResult) {
+                lNumbError = EspStatus.xNumberError(pSwitch.xName());
+                if (lNumbError > 10) {
+                    if (lNumbError > 15) {
+                        lInterval = 60;
+                    } else {
+                        lInterval = 10;
+                    }
+                } else {
+                    lInterval = 1;
+                }
+                lActionMoment = ZonedDateTime.now().plusMinutes(lInterval);
+                if (lActionMoment.isBefore(pAutoEnd)) {
+                    lCorrAction = new Action(lActionMoment, Action.cActionSwitchOff, pSwitch.xName(), pAutoEnd);
+                    mData.xNewAction(lCorrAction);
+                }
+            }
         }
     }
 
@@ -280,6 +374,7 @@ public class Control {
         ZonedDateTime lDateTime;
         Switch lSwitch;
         Transmitter lTrans;
+        ZonedDateTime lEndTime;
 
         if (!pAction.xReady()) {
             switch (pAction.xType()) {
@@ -301,19 +396,39 @@ public class Control {
                     break;
                 }
                 case Action.cActionSwitchOn: {
-                    lTrans = new Transmitter(mData, cGpioOn, false);
-                    lSwitch = mData.xSwitch(pAction.xPar());
+                    lTrans = new Transmitter(false);
+                    lSwitch = mData.xSwitch(pAction.xSwitch());
                     mData.xActionSwitchProcessed(lSwitch);
-                    lTrans.xSwitch(lSwitch, true);
-                    mData.xWriteLog("Switch on " + pAction.xPar() + "!");
+                    if (pAction.xPar().equals("")) {
+                        lTrans.xSwitchOn(lSwitch, null);
+                        mData.xWriteLog("Switch on " + pAction.xSwitch() + "!");
+                    } else {
+                        try {
+                            lEndTime = ZonedDateTime.parse(pAction.xPar(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
+                            sSwitchOnAuto(lTrans, lSwitch, lEndTime);
+                            mData.xWriteLog("Switch on auto " + pAction.xSwitch() + "!");
+                        } catch (DateTimeParseException pExc) {
+                            mData.xWriteLog("Invalid AutoOff time " + pAction.xPar() + ", Action not executed");
+                        }
+                    }
                     break;
                 }
                 case Action.cActionSwitchOff: {
-                    lTrans = new Transmitter(mData, cGpioOn, false);
-                    lSwitch = mData.xSwitch(pAction.xPar());
+                    lTrans = new Transmitter(false);
+                    lSwitch = mData.xSwitch(pAction.xSwitch());
                     mData.xActionSwitchProcessed(lSwitch);
-                    lTrans.xSwitch(lSwitch, false);
-                    mData.xWriteLog("Switch off " + pAction.xPar() + "!");
+                    if (pAction.equals("")) {
+                        lTrans.xSwitchOff(lSwitch);
+                        mData.xWriteLog("Switch off " + pAction.xSwitch() + "!");
+                    } else {
+                        try {
+                            lEndTime = ZonedDateTime.parse(pAction.xPar(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
+                            sSwitchOffAuto(lTrans, lSwitch, lEndTime);
+                            mData.xWriteLog("Switch off auto " + pAction.xSwitch() + "!");
+                        } catch (DateTimeParseException pExc) {
+                            mData.xWriteLog("Invalid End Retry time " + pAction.xPar() + ", Action not executed");
+                        }
+                    }
                     break;
                 }
                 case Action.cActionSwitchAllOn: {
