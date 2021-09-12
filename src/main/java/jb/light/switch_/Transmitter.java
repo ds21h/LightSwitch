@@ -6,8 +6,6 @@
 package jb.light.switch_;
 
 import java.time.ZonedDateTime;
-import jb.light.support.Action;
-import jb.light.support.Data;
 import jb.light.support.Switch;
 import org.json.JSONObject;
 

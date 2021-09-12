@@ -3,9 +3,13 @@
 This is the main module of the Lights application. It runs as a daemon on the server. It handles the automatic switching of the lights.
 For an overview please see repository Lights.
 
-The project structure is that of NetBeans 8.2.
+The project structure is that of NetBeans 8.4/Maven.
 
 History:
+
+Version 1.2 - 12-09-2021
+ - Upgraded to NetBeans 12.4/Maven/JDK 15
+ - Java version limited to 11 because of deployment on Raspbian
 
 Version 1.1.1 - 18-08-2021
  - Recompiled with LightSupport version 1.1.1
