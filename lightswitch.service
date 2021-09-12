@@ -1,0 +1,24 @@
+# Place in /etc/systemd/system
+# After that enable automatic start at reboot by 'systemctl enable lightswitch'
+
+[Unit]
+Description=LSB: LightSwitch
+After=network-online.target
+After=remote-fs.target
+After=all.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+Restart=no
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=process
+GuessMainPID=no
+RemainAfterExit=yes
+SuccessExitStatus=5 6
+ExecStart=/usr/local/Light/LightSwitch.sh start
+ExecStop=/usr/local/Light/LightSwitch.sh stop
+
+[Install]
+WantedBy=multi-user.target
