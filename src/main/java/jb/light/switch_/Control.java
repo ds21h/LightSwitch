@@ -142,6 +142,7 @@ public class Control {
 
                 if (mCurrent.xUpdate().isBefore(lNow)) {
                     lDoneSomething = true;
+                    mData.xClean(mCurrent.xUpdate().minusMonths(1));
                     sUpdate();
                 }
 

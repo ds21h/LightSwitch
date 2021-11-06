@@ -7,6 +7,10 @@ The project structure is that of NetBeans 8.4/Maven.
 
 History:
 
+Version 1.2.1 - 06-11-2021
+ - Added cleaning database at upgrade time one month in the past
+ - Uses LightSupport version 1.2.1
+
 Version 1.2 - 12-09-2021
  - Upgraded to NetBeans 12.4/Maven/JDK 15
  - Java version limited to 11 because of deployment on Raspbian
